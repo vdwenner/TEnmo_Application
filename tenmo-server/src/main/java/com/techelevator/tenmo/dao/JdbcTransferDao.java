@@ -39,11 +39,11 @@ public class JdbcTransferDao implements TransferDao {
         }
 
         if (accountBalanceFrom.compareTo(amount) > 0) {
-
             accountBalanceFrom = accountBalanceFrom.subtract(amount);
-
             accountBalanceTo = accountBalanceTo.add(amount);
-
+            updateAccountBalance(accountBalanceFrom, accountFrom);
+            updateAccountBalance(accountBalanceTo, accountTo);
+            updateTransferStatus();
         }
     }
 
@@ -80,5 +80,15 @@ public class JdbcTransferDao implements TransferDao {
         transfer.setAccountTo(rowSet.getInt("account_to"));
         transfer.setAmount(rowSet.getBigDecimal("amount"));
         return transfer;
+    }
+
+    public void updateAccountBalance(BigDecimal newBalance, int accountId) {
+        String sql = "UPDATE accounts SET balance = ? WHERE account_id = ?;";
+        jdbcTemplate.update(sql, newBalance, accountId);
+    }
+    public void updateTransferStatus(int transferId){
+        String sql = "UPDATE transfers SET transfer_status_id = (SELECT transfer_status_id FROM transfer_statuses WHERE transfer_status_desc = 'Approved')" +
+                "WHERE transfer_id = ?;";
+        jdbcTemplate.update(sql, transferId);
     }
 }
