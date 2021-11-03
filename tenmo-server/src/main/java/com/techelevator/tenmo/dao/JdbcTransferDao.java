@@ -41,9 +41,14 @@ public class JdbcTransferDao implements TransferDao {
         if (accountBalanceFrom.compareTo(amount) > 0) {
             accountBalanceFrom = accountBalanceFrom.subtract(amount);
             accountBalanceTo = accountBalanceTo.add(amount);
+
             updateAccountBalance(accountBalanceFrom, accountFrom);
             updateAccountBalance(accountBalanceTo, accountTo);
-            updateTransferStatus();
+
+            Transfer newTransfer = new Transfer();
+
+            createTransfer(newTransfer);
+            updateTransferStatus(newTransfer.getTransferId());
         }
     }
 
@@ -69,6 +74,17 @@ public class JdbcTransferDao implements TransferDao {
             transfer = mapRowToTransfer(results);
         }
         return transfer;
+    }
+
+    @Override
+    public Transfer createTransfer(Transfer newTransfer) {
+
+        String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+                "VALUES (?, ?, ?, ?, ?) RETURNING transfer_id;";
+        int newId = jdbcTemplate.queryForObject(sql, int.class, newTransfer.getTransferTypeId(), newTransfer.getTransferStatusId(),
+                newTransfer.getAccountFrom(), newTransfer.getAccountTo(), newTransfer.getAmount());
+
+        return getTransferById(newId);
     }
 
     public Transfer mapRowToTransfer(SqlRowSet rowSet) {

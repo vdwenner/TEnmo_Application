@@ -13,4 +13,6 @@ public interface TransferDao {
 
     public Transfer getTransferById(int transferId);
 
+    public Transfer createTransfer(Transfer newTransfer);
+
 }
