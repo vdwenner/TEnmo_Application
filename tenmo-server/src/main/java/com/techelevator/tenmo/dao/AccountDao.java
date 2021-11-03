@@ -12,8 +12,4 @@ public interface AccountDao {
 
     public Account getAccountByUserId(int userId);
 
-    public Account createAccount(Account newAccount);
-
-    public void deleteAccount(int accountId);
-
 }
