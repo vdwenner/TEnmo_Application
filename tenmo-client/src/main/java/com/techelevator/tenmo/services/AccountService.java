@@ -31,6 +31,18 @@ public class AccountService {
         } return account;
     }
 
+    public BigDecimal getAccountBalance(Account account) {
+        BigDecimal balance = BigDecimal.ZERO;
+        try {
+            ResponseEntity<Account> response =
+                    restTemplate.getForObject(API_BASE_URL, HttpMethod.GET, Account.class);
+            balance = response.getBody().getBalance();
+
+        } catch (RestClientResponseException | ResourceAccessException e) {
+            BasicLogger.log(e.getMessage());
+        } return balance;
+    }
+
     private HttpEntity<Account> makeAccountEntity(Account account) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
