@@ -103,7 +103,7 @@ public class JdbcTransferDao implements TransferDao {
         String sql = "UPDATE accounts SET balance = ? WHERE account_id = ?;";
         jdbcTemplate.update(sql, newBalance, accountId);
     }
-    
+
     public void updateTransferStatus(int transferId){
         String sql = "UPDATE transfers SET transfer_status_id = (SELECT transfer_status_id FROM transfer_statuses WHERE transfer_status_desc = 'Approved')" +
                 "WHERE transfer_id = ?;";
