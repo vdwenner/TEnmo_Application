@@ -20,23 +20,14 @@ public class AccountService {
 
     //METHODS WILL GO HERE
 
-    public Account getAccount(int accountId) {
-        Account account = null;
-        try {
-            ResponseEntity<Account> response =
-                    restTemplate.exchange(API_BASE_URL, HttpMethod.GET, makeAuthEntity(), Account.class);
-            account = response.getBody();
-        } catch (RestClientResponseException | ResourceAccessException e) {
-            BasicLogger.log(e.getMessage());
-        } return account;
-    }
 
-    public BigDecimal getAccountBalance(Account account) {
+
+    public BigDecimal getAccountBalance(String authToken) {
         BigDecimal balance = BigDecimal.ZERO;
         try {
-            ResponseEntity<Account> response =
-                    restTemplate.getForObject(API_BASE_URL, HttpMethod.GET, Account.class);
-            balance = response.getBody().getBalance();
+            ResponseEntity<BigDecimal> response =
+                    restTemplate.exchange(API_BASE_URL + "balance/", HttpMethod.GET, makeAuthEntity(authToken), BigDecimal.class);
+            balance = response.getBody();
 
         } catch (RestClientResponseException | ResourceAccessException e) {
             BasicLogger.log(e.getMessage());
@@ -50,9 +41,10 @@ public class AccountService {
         return new HttpEntity<>(account, headers);
     }
 
-    private HttpEntity<Void> makeAuthEntity() {
+    private HttpEntity<Void> makeAuthEntity(String authToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authToken);
         return new HttpEntity<>(headers);
     }
+
 }
