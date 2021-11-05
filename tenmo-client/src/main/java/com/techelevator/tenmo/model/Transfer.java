@@ -11,6 +11,19 @@ public class Transfer {
     private int accountTo;
     private BigDecimal amount;
 
+    @Override
+    public String toString() {
+        return "\n--------------------------------------------" +
+                "\n Transfer Details" +
+                "\n--------------------------------------------" +
+                "\n Id: " + transferId +
+                "\n From: " + accountFrom +
+                "\n To: " + accountTo +
+                "\n Type: " + transferTypeId +
+                "\n Status: " + transferStatusId +
+                "\n Amount: " + amount;
+    }
+
     public Transfer() {}
 
     public Transfer(int transferId, int transferTypeId, int transferStatusId, int accountFrom, int accountTo, BigDecimal amount) {

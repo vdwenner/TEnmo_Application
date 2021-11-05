@@ -11,12 +11,14 @@ public class Transfer {
     private int accountTo;
     private BigDecimal amount;
 
+    private String usernameFrom;
+    private String usernameTo;
+    private String transferTypeString;
+    private String transferStatusString;
+
     public Transfer() {}
 
-    public Transfer(int transferId, int transferTypeId, int transferStatusId, int accountFrom, int accountTo, BigDecimal amount) {
-        this.transferId = transferId;
-        this.transferTypeId = transferTypeId;
-        this.transferStatusId = transferStatusId;
+    public Transfer(int accountFrom, int accountTo, BigDecimal amount) {
         this.accountFrom = accountFrom;
         this.accountTo = accountTo;
         this.amount = amount;
@@ -69,4 +71,50 @@ public class Transfer {
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
+
+    public String getUsernameFrom() {
+        return usernameFrom;
+    }
+
+    public void setUsernameFrom(String usernameFrom) {
+        this.usernameFrom = usernameFrom;
+    }
+
+    public String getUsernameTo() {
+        return usernameTo;
+    }
+
+    public void setUsernameTo(String usernameTo) {
+        this.usernameTo = usernameTo;
+    }
+
+    public String getTransferTypeString() {
+        return transferTypeString;
+    }
+
+    public void setTransferTypeString(String transferTypeString) {
+        this.transferTypeString = transferTypeString;
+    }
+
+    public String getTransferStatusString() {
+        return transferStatusString;
+    }
+
+    public void setTransferStatusString(String transferStatusString) {
+        this.transferStatusString = transferStatusString;
+    }
+
+    @Override
+    public String toString() {
+        return "\n--------------------------------------------" +
+                "\n Transfer Details" +
+                "\n--------------------------------------------" +
+                "\n Id: " + transferId +
+                "\n From:'" + accountFrom +
+                "\n To: " + accountTo +
+                "\n Type: " + transferTypeId +
+                "\n Status: " + transferStatusId +
+                "\n Amount:" + amount;
+    }
+
 }

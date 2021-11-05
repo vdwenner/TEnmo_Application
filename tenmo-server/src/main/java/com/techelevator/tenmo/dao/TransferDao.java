@@ -7,12 +7,24 @@ import java.util.List;
 
 public interface TransferDao {
 
-    public void balanceTransfer(int accountFrom, int accountTo, BigDecimal amount);
+    public Transfer sendTransfer(int accountFrom, int accountTo, BigDecimal amount);
 
-    public List<Transfer> getTransfers();
+    public List<Transfer> getAllTransfers();
 
     public Transfer getTransferById(int transferId);
 
+    public List<Transfer> getAllTransferByUSerId(int userId);
+
     public Transfer createTransfer(Transfer newTransfer);
+
+    public void updateTransferTypeToRequest(int transferId);
+
+    public void updateTransferTypeToSend(int transferId);
+
+    public void updateTransferStatusToPending(int transferId);
+
+    public void updateTransferStatusToApproved(int transferId);
+
+    public void updateTransferStatusToRejected(int transferId);
 
 }
