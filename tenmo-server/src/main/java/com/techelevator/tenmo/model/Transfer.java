@@ -11,12 +11,12 @@ public class Transfer {
     private int accountTo;
     private BigDecimal amount;
 
+    private String transferTypeDescription;
+    private String transferStatusDescription;
     private int senderId;
     private int receiverId;
     private String senderName;
     private String recName;
-    private String transferStatusDescription;
-    private String transferTypeDescription;
 
     public Transfer() {}
 
@@ -103,7 +103,7 @@ public class Transfer {
     }
 
     public void setRecName(String recName) {
-        recName = recName;
+        this.recName = recName;
     }
 
     public String getTransferStatusDescription() {

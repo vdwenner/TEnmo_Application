@@ -1,9 +1,13 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,110 +18,69 @@ public class JdbcAccountDao implements AccountDao {
 
     private JdbcTemplate jdbcTemplate;
 
+
     public JdbcAccountDao(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @Override
-    public Account getAccount(int accountId) {
+    public Account getAccount(int userId) {
+
         Account account = null;
-        String sql = "SELECT a.account_id, a.user_id, a.balance, u.username FROM accounts a " +
-                "JOIN users u ON a.user_id = u.user_id " +
-                "WHERE a.account_id = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId);
-        if (results.next()) {
+
+        String sql = "SELECT a.account_id , a.user_id, a.balance, u.username FROM accounts a " +
+                "JOIN users u ON u.user_id = a.user_id " +
+                "WHERE u.user_id = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+        if (results.next()){
             account = mapRowToAccount(results);
-        }
+        } //catch an exception??
+
         return account;
     }
 
-    @Override
-    public List<Account> getAllAccounts() {
-        List<Account> accounts = new ArrayList<>();
-        String sql = "SELECT a.account_id, a.user_id, a.balance, u.username FROM accounts a" +
-                "JOIN users u ON a.user_id = u.user_id;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql);
-        while (results.next()) {
-            accounts.add(mapRowToAccount(results));
-        }
-        return accounts;
-    }
+    public BigDecimal getBalance(int userId){
 
-    @Override
-    public Account getAccountByUserId(int userId) {
-        Account account = null;
-        String sql = "SELECT a.account_id, a.user_id, a.balance, u.username FROM accounts a " +
-                "JOIN users u ON a.user_id = u.user_id " +
-                "WHERE u.user_id = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
-        if (results.next()) {
-            account = mapRowToAccount(results);
-        }
-        return account;
-    }
+        BigDecimal balance = null;
 
-    @Override
-    public BigDecimal getBalanceByAccountId(int accountId) {
-        BigDecimal balance = BigDecimal.ZERO;
-        String sql = "SELECT balance WHERE account_id = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId);
-        if (results.next()) {
-            balance = results.getBigDecimal("account_id");
-        }
+        String sql = "SELECT balance FROM accounts WHERE user_id = ?";
+        SqlRowSet results  = jdbcTemplate.queryForRowSet(sql, userId);
+
+        if (results.next()){
+            balance = results.getBigDecimal("balance");
+        } //catch an exception??
+
         return balance;
     }
 
-    @Override
-    public BigDecimal getBalanceByUserId(int userId) {
-        BigDecimal balance = BigDecimal.ZERO;
-        String sql = "SELECT balance WHERE user_id = ?;";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
-        if (results.next()) {
-            balance = results.getBigDecimal("user_id");
-        }
-        return balance;
+
+    public void addToBalance(BigDecimal addedAmount, int userId){
+        Account userAccount = getAccount(userId);
+
+        BigDecimal updatedBalance = userAccount.getBalance().add(addedAmount);
+
+        String sql = "UPDATE accounts SET balance = ? WHERE user_id = ?";
+
+        jdbcTemplate.update(sql, updatedBalance, userId);
     }
 
-//    public void updateAccountBalance(BigDecimal newBalance, int userId) {
-//        String sql = "UPDATE accounts SET balance = ? WHERE user_id = ?;";
-//        jdbcTemplate.update(sql, newBalance, userId);
-//    }
+    public void subtractFromBalance(BigDecimal subtractedAmount, int userId){
+        Account userAccount = getAccount(userId);
 
-    @Override
-    public BigDecimal addToBalance(int userid, BigDecimal amount) {
+        BigDecimal updatedBalance = userAccount.getBalance().subtract(subtractedAmount);
 
-        Account userAccount = getAccount(userid);
+        String sql = "UPDATE accounts SET balance = ? WHERE user_id = ?";
 
-        BigDecimal updatedBalance = userAccount.getBalance().add(amount);
-
-        String sql = "UPDATE accounts SET balance =? WHERE user_id =?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userid);
-
-        return userAccount.getBalance();
-
+        jdbcTemplate.update(sql, updatedBalance, userId);
     }
 
-    @Override
-    public BigDecimal subtractFromBalance(int userid, BigDecimal amount) {
-
-        Account userAccount = getAccount(userid);
-
-        BigDecimal updatedBalance = userAccount.getBalance().subtract(amount);
-
-        String sql = "UPDATE accounts SET balance =? WHERE user_id =?";
-        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userid);
-
-        return userAccount.getBalance();
-
-    }
-
-
-    public Account mapRowToAccount(SqlRowSet rowSet) {
+    private Account mapRowToAccount(SqlRowSet rs) {
         Account account = new Account();
-        account.setAccountId(rowSet.getInt("account_id"));
-        account.setBalance(rowSet.getBigDecimal("balance"));
-        account.setUserId(rowSet.getInt("user_id"));
-        account.setUsername(rowSet.getString("username"));
+        account.setAccountId(rs.getInt("account_id"));
+        account.setUserId(rs.getInt("user_id"));
+        account.setBalance(rs.getBigDecimal("balance"));
+        account.setUsername(rs.getString("username"));
+
         return account;
     }
+
 }
