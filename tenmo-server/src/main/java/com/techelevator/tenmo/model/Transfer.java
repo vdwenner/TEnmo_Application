@@ -11,10 +11,12 @@ public class Transfer {
     private int accountTo;
     private BigDecimal amount;
 
-    private String usernameFrom;
-    private String usernameTo;
-    private String transferTypeString;
-    private String transferStatusString;
+    private int senderId;
+    private int receiverId;
+    private String senderName;
+    private String recName;
+    private String transferStatusDescription;
+    private String transferTypeDescription;
 
     public Transfer() {}
 
@@ -72,36 +74,52 @@ public class Transfer {
         this.amount = amount;
     }
 
-    public String getUsernameFrom() {
-        return usernameFrom;
+    public int getSenderId() {
+        return senderId;
     }
 
-    public void setUsernameFrom(String usernameFrom) {
-        this.usernameFrom = usernameFrom;
+    public void setSenderId(int senderId) {
+        this.senderId = senderId;
     }
 
-    public String getUsernameTo() {
-        return usernameTo;
+    public int getReceiverId() {
+        return receiverId;
     }
 
-    public void setUsernameTo(String usernameTo) {
-        this.usernameTo = usernameTo;
+    public void setReceiverId(int receiverId) {
+        this.receiverId = receiverId;
     }
 
-    public String getTransferTypeString() {
-        return transferTypeString;
+    public String getSenderName() {
+        return senderName;
     }
 
-    public void setTransferTypeString(String transferTypeString) {
-        this.transferTypeString = transferTypeString;
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
     }
 
-    public String getTransferStatusString() {
-        return transferStatusString;
+    public String getRecName() {
+        return recName;
     }
 
-    public void setTransferStatusString(String transferStatusString) {
-        this.transferStatusString = transferStatusString;
+    public void setRecName(String recName) {
+        recName = recName;
+    }
+
+    public String getTransferStatusDescription() {
+        return transferStatusDescription;
+    }
+
+    public void setTransferStatusDescription(String transferStatusDescription) {
+        this.transferStatusDescription = transferStatusDescription;
+    }
+
+    public String getTransferTypeDescription() {
+        return transferTypeDescription;
+    }
+
+    public void setTransferTypeDescription(String transferTypeDescription) {
+        this.transferTypeDescription = transferTypeDescription;
     }
 
     @Override
@@ -110,10 +128,10 @@ public class Transfer {
                 "\n Transfer Details" +
                 "\n--------------------------------------------" +
                 "\n Id: " + transferId +
-                "\n From:'" + accountFrom +
-                "\n To: " + accountTo +
-                "\n Type: " + transferTypeId +
-                "\n Status: " + transferStatusId +
+                "\n From:'" + senderName +
+                "\n To: " + recName +
+                "\n Type: " + transferTypeDescription +
+                "\n Status: " + transferStatusDescription +
                 "\n Amount:" + amount;
     }
 
