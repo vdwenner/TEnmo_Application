@@ -27,8 +27,9 @@ public class TenmoController {
     private AccountDao accountDao;
     private UserDao userDao;
 
-    public TenmoController(JdbcAccountDao accountDao, JdbcUserDao userDao) {
+    public TenmoController(TransferDao transferDao, AccountDao accountDao, JdbcUserDao userDao) {
 
+        this.transferdao = transferDao;
         this.accountDao = accountDao;
         this.userDao = userDao;
 
@@ -40,10 +41,11 @@ public class TenmoController {
         return accountDao.getAccountByUserId(userDao.findIdByUsername(currentUser.getName())).getBalance();
     }
 
+    @PreAuthorize("permitAll")
     @RequestMapping(path = "transfers", method = RequestMethod.POST)
-    public Transfer sendTransfer(Principal currentUser, int accountFrom, BigDecimal amount) {
+    public void createTransfer(@RequestBody Transfer transfer) {
 
-        return transferdao.sendTransfer(userDao.findIdByUsername(currentUser.getName()), accountFrom, amount);
+        transferdao.createTransfer(transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
     }
 
 

@@ -2,10 +2,12 @@ package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 
+import javax.xml.crypto.Data;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,27 +24,66 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public Transfer sendTransfer(int accountFrom, int accountTo, BigDecimal amount) {
+    public void createTransfer(int accountFrom, int accountTo, BigDecimal amount) {
 
-        Transfer newTransfer = null;
+        String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+                "VALUES (2, 2, (SELECT account_id from accounts WHERE user_id = ?) , (SELECT account_id from accounts WHERE user_id = ?) " +
+                "RETURNING transfer_id;";
 
-        if (accountDao.getBalanceByAccountId(accountFrom).compareTo(amount) >= 0) {
+        int newTransferId = -1;
+        try {
+            newTransferId = jdbcTemplate.queryForObject(sql, int.class, accountFrom, accountTo, amount);
 
-            accountDao.subtractFromBalance(accountFrom, amount);
-            accountDao.addToBalance(accountTo, amount);
+            System.out.println(newTransferId);
+        } catch (DataAccessException e) {
+            System.out.println("Transfer creation failed.");
+        }
 
-            newTransfer = new Transfer(accountFrom, accountTo, amount);
-            createTransfer(newTransfer);
+        runTransaction(getTransferById(newTransferId));
+    }
 
-            updateTransferTypeToSend(newTransfer.getTransferId());
-            updateTransferStatusToApproved(newTransfer.getTransferId());
+    @Override
+    public void runTransaction(Transfer transfer) {
 
+        int userFrom = transfer.getAccountFrom();
+        int userTo = transfer.getAccountTo();
+        BigDecimal amount = transfer.getAmount();
+        String transferStatus = transfer.getTransferStatusString();
+        String transferType = transfer.getTransferTypeString();
 
-            System.out.println("Transfer successful.");
+        BigDecimal balance = accountDao.getBalanceByAccountId(transfer.getAccountFrom());
 
-        } System.out.println("Insufficient funds.");
+        if (balance.compareTo(amount) >= 0) {
+            accountDao.addToBalance(userTo, amount);
+            accountDao.subtractFromBalance(userFrom, amount);
+        } else {
+            deleteTransfer(transfer.getTransferId());
+        }
 
-        return newTransfer;
+//        if (accountDao.getBalanceByAccountId(accountFrom).compareTo(amount) >= 0) {
+//
+//            accountDao.subtractFromBalance(accountFrom, amount);
+//            accountDao.addToBalance(, amount);
+//
+//            newTransfer = new Transfer(accountFrom, accountTo, amount);
+//            createTransfer(newTransfer);
+//
+//            updateTransferTypeToSend(newTransfer.getTransferId());
+//            updateTransferStatusToApproved(newTransfer.getTransferId());
+//
+//
+//            System.out.println("Transfer successful.");
+//
+//        } System.out.println("Insufficient funds.");
+//
+//        return newTransfer;
+    }
+
+    public void deleteTransfer(int TransferId) {
+
+        String sql = " " +
+                "WHERE transfer_id = ?;";
+
     }
 
     @Override
@@ -107,17 +148,6 @@ public class JdbcTransferDao implements TransferDao {
         }
         return transfers;
 
-    }
-
-    @Override
-    public Transfer createTransfer(Transfer newTransfer) {
-
-        String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING transfer_id;";
-        int newId = jdbcTemplate.queryForObject(sql, int.class, newTransfer.getTransferTypeId(), newTransfer.getTransferStatusId(),
-                newTransfer.getAccountFrom(), newTransfer.getAccountTo(), newTransfer.getAmount());
-
-        return getTransferById(newId);
     }
 
     @Override

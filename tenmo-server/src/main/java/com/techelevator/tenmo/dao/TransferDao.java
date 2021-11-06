@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TransferDao {
 
-    public Transfer sendTransfer(int accountFrom, int accountTo, BigDecimal amount);
+    public void runTransaction(Transfer transfer);
 
     public List<Transfer> getAllTransfers();
 
@@ -15,7 +15,7 @@ public interface TransferDao {
 
     public List<Transfer> getAllTransferByUSerId(int userId);
 
-    public Transfer createTransfer(Transfer newTransfer);
+    public void createTransfer(int accountFrom, int accountTo, BigDecimal amount);
 
     public void updateTransferTypeToRequest(int transferId);
 
