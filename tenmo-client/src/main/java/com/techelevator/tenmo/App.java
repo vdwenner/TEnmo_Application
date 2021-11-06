@@ -70,14 +70,12 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	}
 
 	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
-
-//		AccountService.getAccount(1003);
-
-		System.out.println("Your current balance is: $");
-
-//		accountService.getAccountBalance(AccountService.)
-		accountService.getAccountBalance(currentUser.getToken());
+		AccountService accountService = new AccountService(API_BASE_URL, currentUser);
+		try {
+			accountService.getBalance();
+		} catch (Exception e) {
+			System.out.println("Unable to retrieve balance.");
+		}
 
 	}
 

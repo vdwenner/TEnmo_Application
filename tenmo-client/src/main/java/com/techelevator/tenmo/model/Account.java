@@ -6,18 +6,20 @@ import java.math.BigDecimal;
 
 public class Account {
 
-    @JsonProperty("account_id")
     private int accountId;
-    @JsonProperty("user_id")
     private int userId;
-    @JsonProperty("balance")
     private BigDecimal balance;
+    private String username;
 
     public int getAccountId() { return this.accountId; }
 
     public int getUserId() { return this.userId; }
 
     public BigDecimal getBalance() { return this.balance; }
+
+    public String getUsername() {
+        return username;
+    }
 
     public void setAccountId(int accountId) {
         this.accountId = accountId;
@@ -31,11 +33,16 @@ public class Account {
         this.balance = balance;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public Account() {}
 
-    public Account(int accountId, int userId, BigDecimal balance) {
+    public Account(int accountId, int userId, BigDecimal balance, String username) {
         this.accountId = accountId;
         this.userId = userId;
         this.balance = balance;
+        this.username = username;
     }
 }
