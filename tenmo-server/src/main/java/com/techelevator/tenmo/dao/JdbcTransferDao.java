@@ -115,9 +115,28 @@ public class JdbcTransferDao implements TransferDao {
         return allTransfers;
     }
 
+    @Override
+    public String requestTransfer(int senderId, int receiverId, BigDecimal amount) throws UserNotFoundException {
+        if (accountDao.getBalance(senderId).compareTo(accountDao.getBalance(senderId).subtract(amount)) >= 0){
+
+            String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount)\n" +
+                    "VALUES (?, ?, (SELECT account_id from accounts WHERE user_id = ?) , (SELECT account_id from accounts WHERE user_id = ?), ?)";
+            jdbcTemplate.update(sql, getTransferTypeId("Request"), getTransferStatusId("Pending"), senderId, receiverId, amount);
+
+            return "Request sent!";
+
+        } else {
+            return "Insufficient Funds.";
+        }
+    }
+
     public void updateTransferRequest(Transfer transfer, String status) throws UserNotFoundException, TransferNotFoundException {
         if (status.equals("Approved")){
             if (accountDao.getBalance(transfer.getSenderId()).compareTo(accountDao.getBalance(transfer.getSenderId()).subtract(transfer.getAmount())) >= 0){
+
+                accountDao.subtractFromBalance(transfer.getAmount(), transfer.getSenderId());
+                accountDao.addToBalance(transfer.getAmount(), transfer.getReceiverId());
+
                 String sql = "UPDATE transfers SET transfer_status_id = ? WHERE transfer_id = ?";
                 jdbcTemplate.update(sql, getTransferStatusId("Approved"), transfer.getTransferId());
                 accountDao.addToBalance(transfer.getAmount(), transfer.getReceiverId());
@@ -131,26 +150,6 @@ public class JdbcTransferDao implements TransferDao {
             jdbcTemplate.update(sql, getTransferStatusId("Rejected"), transfer.getTransferId());
         }
     }
-
-    @Override
-    public String requestTransfer(int senderId, int receiverId, BigDecimal amount) throws UserNotFoundException {
-        if (accountDao.getBalance(senderId).compareTo(accountDao.getBalance(senderId).subtract(amount)) >= 0){
-
-            accountDao.subtractFromBalance(amount, senderId);
-            accountDao.addToBalance(amount, receiverId);
-
-            String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount)\n" +
-                    "VALUES (?, ?, (SELECT account_id from accounts WHERE user_id = ?) , (SELECT account_id from accounts WHERE user_id = ?), ?)";
-            jdbcTemplate.update(sql, getTransferTypeId("Request"), getTransferStatusId("Pending"), senderId, receiverId, amount);
-
-
-            return "Request sent!";
-
-        } else {
-            return "Insufficient Funds.";
-        }
-    }
-
 
     private Transfer mapRowToTransfer(SqlRowSet rs) {
         Transfer transfer = new Transfer();

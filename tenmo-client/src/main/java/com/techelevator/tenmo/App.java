@@ -1,6 +1,7 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.AccountService;
 import com.techelevator.tenmo.services.AuthenticationService;
@@ -71,17 +72,16 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 	}
 
 	private void viewCurrentBalance() {
+
 		AccountService accountService = new AccountService(API_BASE_URL, currentUser);
-		try {
-			accountService.getBalance();
-		} catch (Exception e) {
+		try{
+			System.out.println("Your current account balance is: $" + accountService.getBalance());
+		} catch (Exception e){
 			System.out.println("Unable to retrieve balance.");
 		}
-
 	}
 
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
 
 		TransferService transferService = new TransferService(API_BASE_URL, currentUser);
 		System.out.println("\n--------------------------------------------------------");
@@ -89,34 +89,43 @@ private static final String API_BASE_URL = "http://localhost:8080/";
 		System.out.printf("\n %s %26s %21s", "ID", "From/To", "Amount");
 		System.out.println("\n--------------------------------------------------------");
 		transferService.listAllTransfers();
+
 		}
 
 
 	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
 
+		TransferService transferService = new TransferService(API_BASE_URL, currentUser);
+		System.out.println("--------------------------------------------------------");
+		System.out.println("Pending Requests");
+		System.out.printf("\n%s %21s %25s", "ID", "To", "Amount");
+		System.out.println("\n--------------------------------------------------------");
 
-		
+		Transfer pendingTransfer = transferService.viewPendingRequests();
+		transferService.approveOrRejectMenu(pendingTransfer);
 	}
 
 	private void sendBucks() {
-		// TODO Auto-generated method stub
+
 		TransferService transferService = new TransferService(API_BASE_URL, currentUser);
 		System.out.println("\n--------------------------------------------------------");
 		System.out.println("\n Users");
-		System.out.printf("\n %s %23s", "ID", "Name");
+		System.out.printf("\n%s %23s", "ID", "Name");
 		System.out.println("\n--------------------------------------------------------");
 
 		transferService.sendBucks();
-
-//list out all users - separate void method that I call here
-//allow current user to make a selection
-//trigger the
 		
 	}
 
 	private void requestBucks() {
-		// TODO Auto-generated method stub
+
+		TransferService transferService = new TransferService(API_BASE_URL, currentUser);
+		System.out.println("--------------------------------------------------------");
+		System.out.println("Users");
+		System.out.printf("\n%s %23s", "ID", "Name");
+		System.out.println("\n--------------------------------------------------------");
+
+		transferService.requestBucks();
 		
 	}
 	

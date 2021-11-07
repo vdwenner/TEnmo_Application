@@ -11,7 +11,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
@@ -76,7 +75,7 @@ public class TenmoController {
     @PreAuthorize("hasRole('USER')")
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(path = "/transfer/request", method = RequestMethod.POST)
-    public String requestTransfer(@Valid @RequestBody Transfer transfer) throws UserNotFoundException {
+    public String requestTransfer(@RequestBody Transfer transfer) throws UserNotFoundException {
         return transferDao.requestTransfer(transfer.getSenderId(),transfer.getReceiverId(),transfer.getAmount());
     }
 

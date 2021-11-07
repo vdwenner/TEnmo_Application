@@ -22,7 +22,7 @@ public class TransferService {
 
     public TransferService(String url, AuthenticatedUser currentUser) {
         this.currentUser = currentUser;
-        BASE_URL = url + "/account";
+        BASE_URL = url;
     }
 
 
@@ -31,19 +31,19 @@ public class TransferService {
         Transfer[] allTransfers = null;
 
         try {
-            allTransfers = restTemplate.exchange(BASE_URL + "/allTransfers", HttpMethod.GET, makeAuthEntity(), Transfer[].class).getBody();
+            allTransfers = restTemplate.exchange(BASE_URL + "account/allTransfers", HttpMethod.GET, makeAuthEntity(), Transfer[].class).getBody();
 
             for (Transfer transfer : allTransfers) {
 
                 if (currentUser.getUser().getId() == transfer.getSenderId()) {
-                    System.out.printf("\n %s %20s %s %20s", transfer.getTransferId(), "To:", transfer.getRecName(), transfer.getAmount());
+                    System.out.printf("\n%s %18s %-18s %s%s", transfer.getTransferId(), "To:", transfer.getRecName(),"$", transfer.getAmount());
                 } else {
-                    System.out.printf("\n %s %20s %s %20s", transfer.getTransferId(), "From:", transfer.getRecName(), transfer.getAmount());
+                    System.out.printf("\n%s %18s %-18s %s%s", transfer.getTransferId(), "From:", transfer.getRecName(),"$", transfer.getAmount());
                 }
             }
 
             System.out.println("");
-            System.out.print("Please enter transfer ID to view details (0 to cancel): ");
+            System.out.print("\nPlease enter transfer ID to view details (0 to cancel): ");
             int transferDetailId = transferScanner.nextInt();
 
             for (Transfer transfer : allTransfers) {
@@ -55,6 +55,126 @@ public class TransferService {
             System.out.println("Sorry - we have no records for you.");
         }
     }
+
+    public Transfer viewPendingRequests(){
+
+        Transfer[] pendingRequests = restTemplate.exchange(BASE_URL + "account/allTransfers", HttpMethod.GET, makeAuthEntity(), Transfer[].class).getBody();
+        Transfer pendingTransfer = null;
+
+        for (Transfer transfer : pendingRequests) {
+
+            if (transfer.getTransferStatusDescription().equals("Pending")) {
+                System.out.printf("\n%s %18s %-18s %s%s", transfer.getTransferId(), "To:", transfer.getRecName(),"$", transfer.getAmount());
+            }
+        }
+
+        System.out.println("");
+        System.out.print("\nPlease enter transfer ID to approve/reject (0 to cancel): ");
+        int transferDetailId = transferScanner.nextInt();
+
+        for (Transfer transfer : pendingRequests){
+            if (transfer.getTransferId() == transferDetailId){
+                pendingTransfer = transfer;
+            }
+        }
+
+        if (transferDetailId == 0){
+            System.out.println("");
+        }
+
+        return pendingTransfer;
+    }
+
+    public void approveOrRejectMenu(Transfer transfer){
+        AccountService accountService = new AccountService(BASE_URL, currentUser);
+
+        System.out.println("\n" +
+                "\n 1: Approve" +
+                "\n 2: Reject" +
+                "\n 0: Don't approve or reject" +
+                "\n-------------------------------" +
+                "\n Please choose an option ");
+
+        int selection = transferScanner.nextInt();
+
+        if (selection == 0){
+            System.out.println("Pending transfer status remains unchanged.");
+
+        } else if (selection == 1){
+            transfer.setTransferStatusDescription("Approved");
+
+            if (accountService.getBalance().compareTo(transfer.getAmount()) >= 0){
+                restTemplate.put(BASE_URL + "account/updateTransfer", makeTransferEntity(transfer), "Approved");
+                System.out.println("The transfer was approved.");
+            } else {
+                System.out.println("Could not complete transfer: Insufficient Funds.");
+            }
+        } else if (selection == 2){
+            transfer.setTransferStatusDescription("Rejected");
+            restTemplate.put(BASE_URL + "account/updateTransfer", makeTransferEntity(transfer),"Rejected");
+            System.out.println("The transfer was rejected.");
+        } else{
+            System.out.println("You entered an incorrect option.");
+        }
+
+    }
+
+    public void sendBucks () {
+        AccountService accountService = new AccountService(BASE_URL, currentUser);
+        listUsers();
+
+        Transfer transfer = new Transfer();
+        transfer.setSenderId(currentUser.getUser().getId());
+
+        System.out.println("");
+        System.out.print("\nEnter ID of user you are sending to (0 to cancel): ");
+        transfer.setReceiverId(Integer.parseInt(transferScanner.nextLine()));
+
+        System.out.print("\nEnter amount: ");
+        transfer.setAmount(BigDecimal.valueOf(Integer.parseInt(transferScanner.nextLine())));
+        System.out.println("");
+        // ^^^ console input
+
+        if (accountService.getBalance().compareTo(transfer.getAmount()) >= 0){
+            String newTransfer = restTemplate.exchange(BASE_URL + "account/transfer", HttpMethod.POST, makeTransferEntity(transfer), String.class).getBody();
+            System.out.println("Transfer was successful!");
+        } else {
+            System.out.println("Could not complete transfer: Insufficient Funds.");
+        }
+
+    }
+
+    public void requestBucks() {
+
+        AccountService accountService = new AccountService(BASE_URL, currentUser);
+        listUsers();
+
+        Transfer transfer = new Transfer();
+        transfer.setReceiverId(currentUser.getUser().getId());
+
+        System.out.println("");
+        System.out.print("\nEnter ID of user you are requesting from (0 to cancel): ");
+        transfer.setSenderId(Integer.parseInt(transferScanner.nextLine()));
+
+        System.out.print("\nEnter amount: ");
+        transfer.setAmount(BigDecimal.valueOf(Integer.parseInt(transferScanner.nextLine())));
+        System.out.println("");
+        // ^^^ console input
+
+        String newTransfer = restTemplate.exchange(BASE_URL + "account/transfer/request", HttpMethod.POST, makeTransferEntity(transfer), String.class).getBody();
+        System.out.println("Transfer is pending approval");
+
+    }
+
+
+    private void listUsers () {
+        User[] allUsers = restTemplate.exchange(BASE_URL + "account/users", HttpMethod.GET, makeAuthEntity(), User[].class).getBody();
+
+        for (User user : allUsers){
+            System.out.printf("\n %s %20s", user.getId(), user.getUsername());
+        }
+    }
+
     private HttpEntity makeAuthEntity () {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(currentUser.getToken());
@@ -69,14 +189,6 @@ public class TransferService {
         return new HttpEntity<>(transfer, headers);
     }
 
-    private void listUsers () {
-        User[] allUsers = restTemplate.exchange(BASE_URL + "/users", HttpMethod.GET, makeAuthEntity(), User[].class).getBody();
-
-        for (User user : allUsers){
-            System.out.printf("\n %s %20s", user.getId(), user.getUsername());
-        }
-    }
-
     public String transferDetailFormat (Transfer transfer){
         return "\n--------------------------------------------" +
                 "\n Transfer Details" +
@@ -89,26 +201,4 @@ public class TransferService {
                 "\n Amount: " + transfer.getAmount();
     }
 
-    public Transfer sendBucks () {
-        listUsers();
-
-        System.out.println("");
-        System.out.print("\n Enter ID of user you are sending to (0 to cancel): ");
-        int receiverId = transferScanner.nextInt();
-
-        System.out.print("\n Enter amount: ");
-        int money = transferScanner.nextInt();
-        System.out.println("");
-
-        // ^^^ console input
-
-        BigDecimal transferAmount = new BigDecimal(money);
-
-        Transfer transfer = new Transfer(currentUser.getUser().getId(), receiverId, transferAmount);
-
-        Transfer newTransfer = restTemplate.postForObject(BASE_URL + "/transfer", makeTransferEntity(transfer), Transfer.class);
-
-        return newTransfer;
-
-    }
 }

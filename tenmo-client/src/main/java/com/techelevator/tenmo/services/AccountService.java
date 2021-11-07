@@ -19,14 +19,14 @@ public class AccountService {
     }
 
     public BigDecimal getBalance() {
-        BigDecimal balance = new BigDecimal(0);
+        BigDecimal balance = null;
         try {
-            balance = restTemplate.exchange(BASE_URL + "account/balance", HttpMethod.GET, makeAuthEntity(),
-                    BigDecimal.class).getBody();
-            System.out.println("Your current account balance is: $" + balance);
+            balance = restTemplate.exchange(BASE_URL + "account/balance", HttpMethod.GET, makeAuthEntity(), BigDecimal.class).getBody();
+
         } catch (RestClientException e) {
-            System.out.println("Error retrieving balance.");;
-        } return balance;
+            System.out.println("Error retrieving balance");
+        }
+        return balance;
     }
 
     private HttpEntity<Void> makeAuthEntity() {
