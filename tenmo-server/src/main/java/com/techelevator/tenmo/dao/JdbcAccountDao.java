@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.exception.UserNotFoundException;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class JdbcAccountDao implements AccountDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public Account getAccount(int userId) {
+    public Account getAccount(int userId) throws UserNotFoundException {
 
         Account account = null;
 
@@ -33,7 +34,7 @@ public class JdbcAccountDao implements AccountDao {
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
         if (results.next()){
             account = mapRowToAccount(results);
-        } //catch an exception??
+        }
 
         return account;
     }
@@ -47,13 +48,13 @@ public class JdbcAccountDao implements AccountDao {
 
         if (results.next()){
             balance = results.getBigDecimal("balance");
-        } //catch an exception??
+        }
 
         return balance;
     }
 
 
-    public void addToBalance(BigDecimal addedAmount, int userId){
+    public void addToBalance(BigDecimal addedAmount, int userId) throws UserNotFoundException {
         Account userAccount = getAccount(userId);
 
         BigDecimal updatedBalance = userAccount.getBalance().add(addedAmount);
@@ -63,7 +64,7 @@ public class JdbcAccountDao implements AccountDao {
         jdbcTemplate.update(sql, updatedBalance, userId);
     }
 
-    public void subtractFromBalance(BigDecimal subtractedAmount, int userId){
+    public void subtractFromBalance(BigDecimal subtractedAmount, int userId) throws UserNotFoundException {
         Account userAccount = getAccount(userId);
 
         BigDecimal updatedBalance = userAccount.getBalance().subtract(subtractedAmount);

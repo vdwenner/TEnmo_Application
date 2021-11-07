@@ -1,5 +1,6 @@
 package com.techelevator.tenmo.model;
 
+import javax.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
 public class Transfer {
@@ -13,7 +14,9 @@ public class Transfer {
 
     private String transferTypeDescription;
     private String transferStatusDescription;
+    @NotBlank(message = "The field 'senderId' is required.")
     private int senderId;
+    @NotBlank(message = "The field 'receiverId' is required.")
     private int receiverId;
     private String senderName;
     private String recName;

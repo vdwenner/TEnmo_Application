@@ -1,5 +1,7 @@
 package com.techelevator.tenmo.dao;
 
+import com.techelevator.tenmo.exception.TransferNotFoundException;
+import com.techelevator.tenmo.exception.UserNotFoundException;
 import com.techelevator.tenmo.model.Account;
 import com.techelevator.tenmo.model.Transfer;
 import org.springframework.dao.DataAccessException;
@@ -27,7 +29,7 @@ public class JdbcTransferDao implements TransferDao {
 
 
     @Override
-    public String sendTransfer(int senderId, int receiverId, BigDecimal amount){
+    public String sendTransfer(int senderId, int receiverId, BigDecimal amount) throws UserNotFoundException {
 
         if (accountDao.getBalance(senderId).compareTo(amount) >= 0){
 
@@ -46,25 +48,7 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public String requestTransfer(int senderId, int receiverId, BigDecimal amount) {
-        if (accountDao.getBalance(receiverId).compareTo(amount) >= 0){
-
-            accountDao.subtractFromBalance(amount, receiverId);
-            accountDao.addToBalance(amount, senderId);
-
-            String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount)\n" +
-                    "VALUES (?, ?, (SELECT account_id from accounts WHERE user_id = ?) , (SELECT account_id from accounts WHERE user_id = ?), ?)";
-            jdbcTemplate.update(sql, getTransferTypeId("Request"), getTransferStatusId("Pending"), senderId, receiverId, amount);
-
-            return "Transfer successful!";
-
-        } else {
-            return "Insufficient Funds.";
-        }
-    }
-
-    @Override
-    public Transfer getTransferById(int transferId){
+    public Transfer getTransferById(int transferId) throws TransferNotFoundException {
         Transfer transfer = null;
 
         String sql = "SELECT t.transfer_id, su.user_id AS senderId, t.account_from, t.account_to, t.amount, ru.user_id AS receiverId, su.username AS senderName, ru.username AS recName," +
@@ -80,7 +64,7 @@ public class JdbcTransferDao implements TransferDao {
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferId);
         if (results.next()){
             transfer = mapRowToTransfer(results);
-        } //catch an exception??
+        }
 
         return transfer;
     }
@@ -131,10 +115,40 @@ public class JdbcTransferDao implements TransferDao {
         return allTransfers;
     }
 
+    public void updateTransferRequest(Transfer transfer, String status) throws UserNotFoundException, TransferNotFoundException {
+        if (status.equals("Approved")){
+            if (accountDao.getBalance(transfer.getSenderId()).compareTo(accountDao.getBalance(transfer.getSenderId()).subtract(transfer.getAmount())) >= 0){
+                String sql = "UPDATE transfers SET transfer_status_id = ? WHERE transfer_id = ?";
+                jdbcTemplate.update(sql, getTransferStatusId("Approved"), transfer.getTransferId());
+                accountDao.addToBalance(transfer.getAmount(), transfer.getReceiverId());
+                accountDao.subtractFromBalance(transfer.getAmount(), transfer.getSenderId());
+            } else {
+                System.out.println("You do not have enough funds to fulfill this request. It will remaining pending until rejected.");
+            }
+
+        } else if (status.equals("Rejected")){
+            String sql = "UPDATE transfers SET transfer_status_id = ? WHERE transfer_id = ?";
+            jdbcTemplate.update(sql, getTransferStatusId("Rejected"), transfer.getTransferId());
+        }
+    }
 
     @Override
-    public List<Transfer> getPendingRequests(int userId) {
-        return null;
+    public String requestTransfer(int senderId, int receiverId, BigDecimal amount) throws UserNotFoundException {
+        if (accountDao.getBalance(senderId).compareTo(accountDao.getBalance(senderId).subtract(amount)) >= 0){
+
+            accountDao.subtractFromBalance(amount, senderId);
+            accountDao.addToBalance(amount, receiverId);
+
+            String sql = "INSERT INTO transfers (transfer_type_id, transfer_status_id, account_from, account_to, amount)\n" +
+                    "VALUES (?, ?, (SELECT account_id from accounts WHERE user_id = ?) , (SELECT account_id from accounts WHERE user_id = ?), ?)";
+            jdbcTemplate.update(sql, getTransferTypeId("Request"), getTransferStatusId("Pending"), senderId, receiverId, amount);
+
+
+            return "Request sent!";
+
+        } else {
+            return "Insufficient Funds.";
+        }
     }
 
 
